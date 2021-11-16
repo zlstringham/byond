@@ -1,0 +1,22 @@
+[package]
+name = "byond-crc32"
+version = "1.1.0"
+authors = ["Zac Stringham <zlstringham@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Fast CRC-32/BYOND checksum computation"
+repository = "https://github.com/zlstringham/byond"
+readme = "README.md"
+keywords = ["byond", "checksum", "crc", "crc32"]
+categories = ["algorithms", "no-std"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dev-dependencies]
+quickcheck = "1.0"
+
+[features]
+default = ["std"]
+std = []
