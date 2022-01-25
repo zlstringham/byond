@@ -49,6 +49,11 @@ impl Crc32 {
         self.state
     }
 
+    /// Returns true if no data has been consumed so far.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// The length of data consumed to create the current checksum value.
     pub fn len(&self) -> u64 {
         self.len
