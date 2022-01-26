@@ -8,15 +8,12 @@
 //! let checksum = crc32.as_u32();
 //! ```
 
-#![cfg_attr(not(any(feature = "std", test)), no_std)]
+#![cfg_attr(not(test), no_std)]
 
 mod combine;
 mod tables;
 
-#[cfg(not(feature = "std"))]
 use core::{convert::TryInto, hash::Hasher};
-#[cfg(feature = "std")]
-use std::{convert::TryInto, hash::Hasher};
 
 use combine::combine;
 
@@ -138,7 +135,7 @@ pub(crate) fn update_slow(crc: u32, bytes: &[u8]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use quickcheck::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     const CHECK: u32 = 0xa5fd3138;
 
@@ -177,13 +174,13 @@ mod tests {
         assert_eq!(CHECK, golden(crate::DEFAULT_CRC32, b"123456789"));
     }
 
-    quickcheck! {
-        fn update_slow_matches_golden(crc: u32, bytes: Vec<u8>) -> bool {
-            super::update_slow(crc, &bytes) == golden(crc, &bytes)
-        }
+    #[quickcheck]
+    fn update_slow_matches_golden(crc: u32, bytes: Vec<u8>) -> bool {
+        super::update_slow(crc, &bytes) == golden(crc, &bytes)
+    }
 
-        fn update_fast_matches_golden(crc: u32, bytes: Vec<u8>) -> bool {
-            super::update_fast(crc, &bytes) == golden(crc, &bytes)
-        }
+    #[quickcheck]
+    fn update_fast_matches_golden(crc: u32, bytes: Vec<u8>) -> bool {
+        super::update_fast(crc, &bytes) == golden(crc, &bytes)
     }
 }

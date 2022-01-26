@@ -1,6 +1,6 @@
 [package]
 name = "byond-crc32"
-version = "1.2.1"
+version = "2.0.0"
 authors = ["Zac Stringham <zlstringham@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -15,8 +15,5 @@ categories = ["algorithms", "no-std"]
 [dependencies]
 
 [dev-dependencies]
-quickcheck = "1.0"
-
-[features]
-default = ["std"]
-std = []
+quickcheck = "1"
+quickcheck_macros = "1"
