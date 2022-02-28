@@ -109,18 +109,26 @@ impl PartialEq<Crc32> for u32 {
 pub(crate) fn update_fast(mut crc: u32, bytes: &[u8]) -> u32 {
     use tables::WORD_TABLE;
     crc = u32::swap_bytes(crc);
-    let chunks = bytes.chunks_exact(8);
+    let chunks = bytes.chunks_exact(16);
     let remainder = chunks.remainder();
-    crc = chunks.fold(crc, |crc, word| {
-        let word = u64::from(crc) ^ u64::from_le_bytes(word.try_into().unwrap());
-        WORD_TABLE[7][(word & 0xff) as usize]
-            ^ WORD_TABLE[6][((word >> 8) & 0xff) as usize]
-            ^ WORD_TABLE[5][((word >> 16) & 0xff) as usize]
-            ^ WORD_TABLE[4][((word >> 24) & 0xff) as usize]
-            ^ WORD_TABLE[3][((word >> 32) & 0xff) as usize]
-            ^ WORD_TABLE[2][((word >> 40) & 0xff) as usize]
-            ^ WORD_TABLE[1][((word >> 48) & 0xff) as usize]
-            ^ WORD_TABLE[0][(word >> 56) as usize]
+    crc = chunks.fold(crc, |mut crc, word| {
+        crc ^= u32::from_le_bytes(word[0..4].try_into().unwrap());
+        WORD_TABLE[15][(crc & 0xff) as usize]
+            ^ WORD_TABLE[14][((crc >> 8) & 0xff) as usize]
+            ^ WORD_TABLE[13][((crc >> 16) & 0xff) as usize]
+            ^ WORD_TABLE[12][((crc >> 24) & 0xff) as usize]
+            ^ WORD_TABLE[11][word[4] as usize]
+            ^ WORD_TABLE[10][word[5] as usize]
+            ^ WORD_TABLE[9][word[6] as usize]
+            ^ WORD_TABLE[8][word[7] as usize]
+            ^ WORD_TABLE[7][word[8] as usize]
+            ^ WORD_TABLE[6][word[9] as usize]
+            ^ WORD_TABLE[5][word[10] as usize]
+            ^ WORD_TABLE[4][word[11] as usize]
+            ^ WORD_TABLE[3][word[12] as usize]
+            ^ WORD_TABLE[2][word[13] as usize]
+            ^ WORD_TABLE[1][word[14] as usize]
+            ^ WORD_TABLE[0][word[15] as usize]
     });
     crc = u32::swap_bytes(crc);
     update_slow(crc, remainder)

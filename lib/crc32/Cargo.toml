@@ -15,5 +15,10 @@ categories = ["algorithms", "no-std"]
 [dependencies]
 
 [dev-dependencies]
+criterion = "0.3"
 quickcheck = "1"
 quickcheck_macros = "1"
+
+[[bench]]
+name = "crc32"
+harness = false
