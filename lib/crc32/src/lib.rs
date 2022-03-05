@@ -142,6 +142,8 @@ fn golden(crc: u32, bytes: &[u8]) -> u32 {
 
 #[cfg(test)]
 mod tests {
+    use quickcheck_macros::quickcheck;
+
     use crate::golden;
 
     const CHECK: u32 = 0xa5fd3138;
@@ -149,6 +151,13 @@ mod tests {
     #[test]
     fn golden_is_valid() {
         assert_eq!(CHECK, golden(crate::DEFAULT_CRC32, b"123456789"));
+    }
+
+    #[quickcheck]
+    fn check(data: Vec<u8>) -> bool {
+        let mut crc32 = super::Crc32::new();
+        crc32.update(data.as_slice());
+        crc32.as_u32() == golden(crate::DEFAULT_CRC32, data.as_slice())
     }
 
     #[test]
