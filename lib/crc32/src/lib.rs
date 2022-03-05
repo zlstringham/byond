@@ -8,13 +8,16 @@
 //! let checksum = crc32.as_u32();
 //! ```
 
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 
 mod baseline;
 mod combine;
 mod tables;
 
+#[cfg(not(feature = "std"))]
 use core::hash::Hasher;
+#[cfg(feature = "std")]
+use std::hash::Hasher;
 
 const DEFAULT_CRC32: u32 = 0xffffffff;
 
