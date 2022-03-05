@@ -13,6 +13,7 @@ categories = ["algorithms", "no-std"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cfg-if = "1"
 
 [dev-dependencies]
 criterion = "0.3"

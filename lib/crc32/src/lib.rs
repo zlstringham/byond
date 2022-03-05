@@ -10,8 +10,9 @@
 
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 
-mod baseline;
+pub mod baseline;
 mod combine;
+pub mod specialized;
 mod tables;
 
 #[cfg(not(feature = "std"))]
@@ -24,6 +25,7 @@ const DEFAULT_CRC32: u32 = 0xffffffff;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum State {
     Baseline(baseline::State),
+    Specialized(specialized::State),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -45,16 +47,18 @@ impl Crc32 {
     /// The `len` parameter represents the amount of bytes consumed to
     /// create the existing checksum, and is used when combining checksums.
     pub fn new_with_initial(crc: u32, len: u64) -> Self {
-        Self {
-            len,
-            state: State::Baseline(baseline::State::new(crc)),
-        }
+        let state = specialized::State::new(crc).map_or_else(
+            || State::Baseline(baseline::State::new(crc)),
+            |state| State::Specialized(state),
+        );
+        Self { len, state }
     }
 
     /// Gets the underlying checksum value.
     pub fn as_u32(&self) -> u32 {
         match self.state {
-            State::Baseline(state) => state.as_u32(),
+            State::Baseline(ref state) => state.as_u32(),
+            State::Specialized(ref state) => state.as_u32(),
         }
     }
 
@@ -73,6 +77,7 @@ impl Crc32 {
         self.len = 0;
         match self.state {
             State::Baseline(ref mut state) => state.reset(),
+            State::Specialized(ref mut state) => state.reset(),
         }
     }
 
@@ -81,17 +86,13 @@ impl Crc32 {
         self.len += bytes.len() as u64;
         match self.state {
             State::Baseline(ref mut state) => state.update(bytes),
+            State::Specialized(ref mut state) => state.update(bytes),
         }
     }
 
     /// Combines two CRC-32/BYOND checksums.
     pub fn combine(a: &Self, b: &Self) -> Self {
-        let crc1 = match a.state {
-            State::Baseline(ref state) => state.as_u32(),
-        };
-        let crc2 = match b.state {
-            State::Baseline(ref state) => state.as_u32(),
-        };
+        let (crc1, crc2) = (a.as_u32(), b.as_u32());
         Self::new_with_initial(combine::combine(crc1, crc2, b.len), a.len + b.len)
     }
 }

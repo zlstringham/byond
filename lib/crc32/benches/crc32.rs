@@ -1,22 +1,75 @@
-use byond_crc32::Crc32;
+use byond_crc32::{baseline, specialized};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-fn crc32_4kib(c: &mut Criterion) {
-    c.bench_function("CRC32/BYOND 4KiB", |b| {
+fn crc32_4kib_baseline(c: &mut Criterion) {
+    c.bench_function("CRC32/BYOND 4KiB Baseline", |b| {
         let v = vec![13u8; 4 * 1024];
         b.iter(|| {
-            let mut crc = Crc32::new();
+            let mut crc = baseline::State::new(0xffffffff);
             crc.update(black_box(v.as_slice()));
             crc.as_u32()
         });
     });
 }
 
-fn crc32_4mib(c: &mut Criterion) {
-    c.bench_function("CRC32/BYOND 4MiB", |b| {
+fn crc32_4mib_baseline(c: &mut Criterion) {
+    c.bench_function("CRC32/BYOND 4MiB Baseline", |b| {
         let v = vec![13u8; 4 * 1024 * 1024];
         b.iter(|| {
-            let mut crc = Crc32::new();
+            let mut crc = baseline::State::new(0xffffffff);
+            crc.update(black_box(v.as_slice()));
+            crc.as_u32()
+        });
+    });
+}
+
+fn crc32_4gib_baseline(c: &mut Criterion) {
+    c.bench_function("CRC32/BYOND 4GiB Baseline", |b| {
+        let v = vec![13u8; 4 * 1024 * 1024 * 1024];
+        b.iter(|| {
+            let mut crc = baseline::State::new(0xffffffff);
+            crc.update(black_box(v.as_slice()));
+            crc.as_u32()
+        });
+    });
+}
+
+fn crc32_4kib_specialized(c: &mut Criterion) {
+    if specialized::State::new(0xffffffff).is_none() {
+        return;
+    }
+    c.bench_function("CRC32/BYOND 4KiB Specialized", |b| {
+        let v = vec![13u8; 4 * 1024];
+        b.iter(|| {
+            let mut crc = specialized::State::new(0xffffffff).unwrap();
+            crc.update(black_box(v.as_slice()));
+            crc.as_u32()
+        });
+    });
+}
+
+fn crc32_4mib_specialized(c: &mut Criterion) {
+    if specialized::State::new(0xffffffff).is_none() {
+        return;
+    }
+    c.bench_function("CRC32/BYOND 4MiB Specialized", |b| {
+        let v = vec![13u8; 4 * 1024 * 1024];
+        b.iter(|| {
+            let mut crc = specialized::State::new(0xffffffff).unwrap();
+            crc.update(black_box(v.as_slice()));
+            crc.as_u32()
+        });
+    });
+}
+
+fn crc32_4gib_specialized(c: &mut Criterion) {
+    if specialized::State::new(0xffffffff).is_none() {
+        return;
+    }
+    c.bench_function("CRC32/BYOND 4GiB Specialized", |b| {
+        let v = vec![13u8; 4 * 1024 * 1024 * 1024];
+        b.iter(|| {
+            let mut crc = specialized::State::new(0xffffffff).unwrap();
             crc.update(black_box(v.as_slice()));
             crc.as_u32()
         });
@@ -43,9 +96,30 @@ fn naive_crc32_4mib(c: &mut Criterion) {
     });
 }
 
-criterion_group!(naive_benches, naive_crc32_4kib, naive_crc32_4mib);
-criterion_group!(benches, crc32_4kib, crc32_4mib);
-criterion_main!(naive_benches, benches);
+fn naive_crc32_4gib(c: &mut Criterion) {
+    c // This benchmark takes forever otherwise.
+        .bench_function("CRC32/BYOND 4GiB Naive", |b| {
+            let v = vec![13u8; 4 * 1024 * 1024 * 1024];
+            b.iter(|| naive_crc32(0xffffff, v.as_slice()));
+        });
+}
+
+criterion_group! {
+    name = naive_benches;
+    config = Criterion::default().sample_size(10);
+    targets = naive_crc32_4kib, naive_crc32_4mib, naive_crc32_4gib
+}
+criterion_group! {
+    name = baseline_benches;
+    config = Criterion::default().sample_size(10);
+    targets = crc32_4kib_baseline, crc32_4mib_baseline, crc32_4gib_baseline
+}
+criterion_group! {
+    name = specialized_benches;
+    config = Criterion::default().sample_size(10);
+    targets = crc32_4kib_specialized, crc32_4mib_specialized, crc32_4gib_specialized
+}
+criterion_main!(naive_benches, baseline_benches, specialized_benches);
 
 const BYTE_TABLE: [u32; 256] = [
     0x0000, 0x00af, 0x015e, 0x01f1, 0x02bc, 0x0213, 0x03e2, 0x034d, 0x0578, 0x05d7, 0x0426, 0x0489,
