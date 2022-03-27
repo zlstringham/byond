@@ -1,0 +1,20 @@
+[package]
+name = "byondrs"
+version = "0.1.0"
+authors = ["Zac Stringham <zlstringham@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Unofficial C library for BYOND, built in Rust"
+repository = "https://github.com/zlstringham/byond"
+readme = "README.md"
+build = "build.rs"
+
+[dependencies]
+byond-crc32 = "3.0"
+libc = "0.2"
+
+[build-dependencies]
+cbindgen = "0.21.0"
+
+[lib]
+crate-type = ["cdylib"]
