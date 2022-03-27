@@ -8,6 +8,7 @@ description = "Unofficial C library for BYOND, built in Rust"
 repository = "https://github.com/zlstringham/byond"
 readme = "README.md"
 build = "build.rs"
+publish = false
 
 [dependencies]
 byond-crc32 = "3.0"
