@@ -36,7 +36,7 @@ pub(crate) fn slice_by_16(mut crc: u32, bytes: &[u8]) -> u32 {
         WORD_TABLE[15][(crc & 0xff) as usize]
             ^ WORD_TABLE[14][((crc >> 8) & 0xff) as usize]
             ^ WORD_TABLE[13][((crc >> 16) & 0xff) as usize]
-            ^ WORD_TABLE[12][((crc >> 24) & 0xff) as usize]
+            ^ WORD_TABLE[12][(crc >> 24) as usize]
             ^ WORD_TABLE[11][word[4] as usize]
             ^ WORD_TABLE[10][word[5] as usize]
             ^ WORD_TABLE[9][word[6] as usize]

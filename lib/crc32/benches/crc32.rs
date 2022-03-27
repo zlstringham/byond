@@ -97,11 +97,10 @@ fn naive_crc32_4mib(c: &mut Criterion) {
 }
 
 fn naive_crc32_4gib(c: &mut Criterion) {
-    c // This benchmark takes forever otherwise.
-        .bench_function("CRC32/BYOND 4GiB Naive", |b| {
-            let v = vec![13u8; 4 * 1024 * 1024 * 1024];
-            b.iter(|| naive_crc32(0xffffff, v.as_slice()));
-        });
+    c.bench_function("CRC32/BYOND 4GiB Naive", |b| {
+        let v = vec![13u8; 4 * 1024 * 1024 * 1024];
+        b.iter(|| naive_crc32(0xffffff, v.as_slice()));
+    });
 }
 
 criterion_group! {
