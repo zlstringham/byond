@@ -49,7 +49,7 @@ impl Crc32 {
     pub fn new_with_initial(crc: u32, len: u64) -> Self {
         let state = specialized::State::new(crc).map_or_else(
             || State::Baseline(baseline::State::new(crc)),
-            |state| State::Specialized(state),
+            State::Specialized,
         );
         Self { len, state }
     }
