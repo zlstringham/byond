@@ -1,6 +1,5 @@
 cfg_if::cfg_if! {
     if #[cfg(all(
-        target_feature = "sse2",
         any(target_arch = "x86", target_arch = "x86_64")
     ))] {
         mod pclmulqdq;

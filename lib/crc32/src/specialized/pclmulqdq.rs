@@ -12,7 +12,6 @@ impl State {
     #[cfg(not(feature = "std"))]
     pub fn new(state: u32) -> Option<Self> {
         if cfg!(all(
-            target_feature = "sse2",
             target_feature = "sse4.1"
             target_feature = "pclmulqdq",
         )) {
@@ -24,10 +23,7 @@ impl State {
 
     #[cfg(feature = "std")]
     pub fn new(state: u32) -> Option<Self> {
-        if is_x86_feature_detected!("pclmulqdq")
-            && is_x86_feature_detected!("sse4.1")
-            && is_x86_feature_detected!("sse2")
-        {
+        if is_x86_feature_detected!("pclmulqdq") && is_x86_feature_detected!("sse4.1") {
             Some(Self { state })
         } else {
             None
@@ -68,7 +64,7 @@ const RK18: u64 = 0x784a_4838_0000_0000;
 const RK19: u64 = 0x7d21_bf20_0000_0000;
 const RK20: u64 = 0xfaeb_d3d3_0000_0000;
 
-#[target_feature(enable = "pclmulqdq", enable = "sse2", enable = "sse4.1")]
+#[target_feature(enable = "pclmulqdq", enable = "sse4.1")]
 pub unsafe fn calculate(crc: u32, mut data: &[u8]) -> u32 {
     if data.len() < 16 * 8 * 2 {
         // This could be handled in intrinsics, but this seems fine for now.
