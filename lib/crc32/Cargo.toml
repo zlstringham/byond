@@ -1,6 +1,6 @@
 [package]
 name = "byond-crc32"
-version = "2.0.0"
+version = "3.0.0"
 authors = ["Zac Stringham <zlstringham@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
