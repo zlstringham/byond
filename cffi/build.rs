@@ -1,4 +1,5 @@
-use cbindgen::{Config, Language};
+use cbindgen::{Config, ExportConfig, Language};
+use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 
@@ -13,11 +14,20 @@ fn main() {
         .display()
         .to_string();
 
+    let mut renames = HashMap::new();
+    renames.insert("Crc32Struct".to_string(), "crc32_struct".to_string());
+    let exports = ExportConfig {
+        rename: renames,
+        ..Default::default()
+    };
+
     let config = Config {
         autogen_warning: Some("// GENERATED FILE. Do not modify.".to_string()),
         language: Language::C,
         cpp_compat: true,
         namespace: Some("byondrs".to_string()),
+        export: exports,
+        line_length: 80,
         ..Default::default()
     };
 
