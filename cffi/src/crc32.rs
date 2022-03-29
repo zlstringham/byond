@@ -11,6 +11,8 @@ pub struct Crc32Struct {
 
 /// Creates and initializes a new CRC-32/BYOND checksum.
 ///
+/// # Safety
+///
 /// The pointer returned must be freed with `crc32_destroy`.
 #[no_mangle]
 pub extern "C" fn crc32_create() -> *mut Crc32Struct {
@@ -23,7 +25,9 @@ pub extern "C" fn crc32_create() -> *mut Crc32Struct {
 /// calculate the checksum up to this point. The length is used in the
 /// calculation for `crc32_combine`.
 ///
-/// The pointer returned must also be freed with `crc32_destroy`.
+/// # Safety
+///
+/// The pointer returned must be freed with `crc32_destroy`.
 #[no_mangle]
 pub extern "C" fn crc32_create_with_initial(crc: u32, len: size_t) -> *mut Crc32Struct {
     Box::into_raw(Box::new(Crc32::new_with_initial(crc, len as u64))) as *mut Crc32Struct
@@ -32,9 +36,11 @@ pub extern "C" fn crc32_create_with_initial(crc: u32, len: size_t) -> *mut Crc32
 /// Creates a CRC-32/BYOND checksum as the combination of two component
 /// checksums.
 ///
+/// # Safety
+///
 /// The pointer returned must be freed with `crc32_destroy`. The two component
 /// checksums are not freed by this function and must still be freed with
-/// `crc32_destroy`.
+/// `crc32_destroy`. The component pointers should point to valid crc32 structs.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_combine(
     crc_a_ptr: *const Crc32Struct,
@@ -50,6 +56,10 @@ pub unsafe extern "C" fn crc32_combine(
 }
 
 /// Free the heap memory from a CRC-32/BYOND checksum.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_destroy(crc_ptr: *mut Crc32Struct) {
     if !crc_ptr.is_null() {
@@ -58,6 +68,10 @@ pub unsafe extern "C" fn crc32_destroy(crc_ptr: *mut Crc32Struct) {
 }
 
 /// Gets the 32-bit value of a CRC-32/BYOND checksum.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_as_u32(crc_ptr: *const Crc32Struct) -> u32 {
     if let Some(crc) = (crc_ptr as *const Crc32).as_ref() {
@@ -67,6 +81,10 @@ pub unsafe extern "C" fn crc32_as_u32(crc_ptr: *const Crc32Struct) -> u32 {
 }
 
 /// Returns whether or not the CRC-32/BYOND checksum has ingested no data.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_is_empty(crc_ptr: *const Crc32Struct) -> bool {
     if let Some(crc) = (crc_ptr as *const Crc32).as_ref() {
@@ -76,6 +94,10 @@ pub unsafe extern "C" fn crc32_is_empty(crc_ptr: *const Crc32Struct) -> bool {
 }
 
 /// Returns the length of data ingested by the CRC-32/BYOND checksum.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_len(crc_ptr: *const Crc32Struct) -> u64 {
     if let Some(crc) = (crc_ptr as *const Crc32).as_ref() {
@@ -88,6 +110,10 @@ pub unsafe extern "C" fn crc32_len(crc_ptr: *const Crc32Struct) -> u64 {
 ///
 /// This can be useful for reusing a single checksum to hash multiple
 /// data streams, rather than allocating separate checksums for each stream.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_reset(crc_ptr: *mut Crc32Struct) {
     if let Some(crc) = (crc_ptr as *mut Crc32).as_mut() {
@@ -96,6 +122,11 @@ pub unsafe extern "C" fn crc32_reset(crc_ptr: *mut Crc32Struct) {
 }
 
 /// Updates a CRC-32/BYOND checksum with some data.
+///
+/// # Safety
+///
+/// The pointer should point to a valid crc32 struct, and len should not
+/// exceed the length of data.
 #[no_mangle]
 pub unsafe extern "C" fn crc32_update(crc_ptr: *mut Crc32Struct, data: *const u8, len: size_t) {
     match (data.is_null(), (crc_ptr as *mut Crc32).as_mut()) {
