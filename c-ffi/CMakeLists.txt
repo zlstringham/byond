@@ -23,8 +23,7 @@ add_dependencies(byondrs byondrs_rust)
 # Hack: target_include_directories() fails at configure time if the directory
 # doesn't exist, but the custom target generates it at build time.
 file(MAKE_DIRECTORY ${BYONDRS_INCLUDE})
-target_include_directories(byondrs
-                           INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(byondrs INTERFACE ${BYONDRS_INCLUDE})
 
 # Hack: target_sources() fails at configure time if the file doesn't exist, but
 # the custom target generates it at build time.
