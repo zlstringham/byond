@@ -11,11 +11,15 @@ build = "build.rs"
 publish = false
 
 [dependencies]
-byond-crc32 = "3.0"
+byond-crc32 = { version = "3.0", optional = true, path = "../lib/crc32" }
 libc = "0.2"
 
 [build-dependencies]
 cbindgen = "0.21.0"
+
+[features]
+default = ["crc32"]
+crc32 = ["byond-crc32"]
 
 [lib]
 crate-type = ["cdylib"]
