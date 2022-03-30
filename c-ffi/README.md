@@ -1,6 +1,6 @@
 # byondrs
 
-_Unofficial C library for working with BYOND data._
+_Unofficial C library for working with BYOND data, written in Rust._
 
 ## License
 
