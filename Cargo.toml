@@ -1,2 +1,2 @@
 [workspace]
-members = ["cffi", "lib/crc32"]
+members = ["c-ffi", "lib/crc32"]
