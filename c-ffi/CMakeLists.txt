@@ -62,3 +62,10 @@ else ()
     TARGET byondrs PROPERTY IMPORTED_LOCATION_DEBUG
                             ${CMAKE_CURRENT_BINARY_DIR}/debug/libbyondrs.so)
 endif ()
+
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+  add_test(
+    NAME byondrs_test
+    COMMAND cargo test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif ()
