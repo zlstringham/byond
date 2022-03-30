@@ -2,11 +2,6 @@
 
 _Unofficial C library for working with BYOND data._
 
-## TODO
-
-This library doesn't currently export any C projects (e.g. CMake) for
-easy inclusion in external projects.
-
 ## License
 
 Licensed under either of
