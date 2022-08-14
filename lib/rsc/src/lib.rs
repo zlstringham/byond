@@ -1,8 +1,10 @@
 mod crypt;
 mod decode;
+mod encode;
 mod error;
 
 pub use decode::Decoder;
+pub use encode::Encoder;
 pub use error::DecodeError;
 
 #[derive(Clone, Debug, Default)]

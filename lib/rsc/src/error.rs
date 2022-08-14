@@ -13,3 +13,11 @@ pub enum DecodeError {
     #[error(transparent)]
     IoError(#[from] io::Error),
 }
+
+#[derive(Debug, Error)]
+pub enum EncodeError {
+    #[error("size limit exceeded (size {0} exceeds maximum {})", u32::MAX)]
+    SizeLimitExceeded(usize),
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+}
