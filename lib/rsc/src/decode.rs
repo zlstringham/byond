@@ -9,6 +9,7 @@ use crate::{
     Resource,
 };
 
+#[derive(Debug)]
 pub struct Decoder<R: Read> {
     reader: BufReader<R>,
     skip_checksum: bool,
