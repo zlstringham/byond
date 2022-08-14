@@ -2,17 +2,24 @@ use std::io::{self, BufRead, BufReader, ErrorKind, Read};
 
 use byteorder::{ByteOrder, LittleEndian, ReadBytesExt};
 
-use crate::{error::DecodeError, Resource};
+use crate::{crypt::decrypt, error::DecodeError, Resource};
 
 pub struct Decoder<R: Read> {
     reader: BufReader<R>,
+    decrypt: bool,
 }
 
 impl<R: Read> Decoder<R> {
     pub fn new(r: R) -> Self {
         Self {
             reader: BufReader::new(r),
+            decrypt: true,
         }
+    }
+
+    pub fn decrypt<'a>(&'a mut self, decrypt: bool) -> &'a Self {
+        self.decrypt = decrypt;
+        self
     }
 
     pub fn read_next(&mut self) -> Result<Option<Resource>, DecodeError> {
@@ -40,7 +47,7 @@ impl<R: Read> Decoder<R> {
             };
         }
 
-        let flags = self.reader.read_u8()?;
+        let mut flags = self.reader.read_u8()?;
         let mut crc_bytes = [0u8; 4];
         self.reader.read_exact(&mut crc_bytes)?;
         let modified_time = self.reader.read_u32::<LittleEndian>()?;
@@ -58,7 +65,16 @@ impl<R: Read> Decoder<R> {
         let mut data = Vec::with_capacity(size as usize);
         io::copy(&mut self.reader.by_ref().take(size as u64), &mut data)?;
 
-        // TODO: decrypt.
+        let _crc;
+        if self.decrypt && flags & 0x80 != 0 {
+            decrypt(0x45dd0ba6, &mut crc_bytes);
+            _crc = LittleEndian::read_u32(&crc_bytes);
+            decrypt(_crc, &mut data);
+            flags &= 0x7f;
+        } else {
+            _crc = LittleEndian::read_u32(&crc_bytes);
+        }
+
         // TODO: checksum.
 
         Ok(Some(Resource {
