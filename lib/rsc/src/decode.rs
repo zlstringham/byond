@@ -58,13 +58,13 @@ impl<R: Read> Decoder<R> {
         if size > isize::MAX as u32 {
             return Err(DecodeError::SizeLimitExceeded(size));
         }
-        let mut name_bytes = Vec::with_capacity(32);
+        let mut name_bytes = vec![];
         self.reader.read_until(b'\0', &mut name_bytes)?;
         if name_bytes[name_bytes.len() - 1] == b'\0' {
             name_bytes.pop();
         }
         let mut data = Vec::with_capacity(size as usize);
-        io::copy(&mut self.reader.by_ref().take(size as u64), &mut data)?;
+        self.reader.read_exact(&mut data)?;
 
         let crc;
         if flags & 0x80 != 0 {
