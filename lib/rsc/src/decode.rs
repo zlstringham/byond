@@ -26,6 +26,7 @@ impl<R: Read> Decoder<R> {
     pub fn read_next(&mut self) -> Result<Option<Resource>, DecodeError> {
         loop {
             let mut block_info = [0u8; 5];
+            // TODO: Should handle read() returning 0 < n < 5.
             match self.reader.read(&mut block_info) {
                 Ok(0) => return Ok(None),
                 Err(e) if e.kind() == ErrorKind::Interrupted => continue,
