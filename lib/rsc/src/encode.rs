@@ -1,20 +1,27 @@
 use std::io::{BufWriter, Write};
 
 use byond_crc32::Crc32;
-use byteorder::{LittleEndian, WriteBytesExt};
+use byteorder::{ByteOrder, LittleEndian, WriteBytesExt};
 
-use crate::{error::EncodeError, Resource};
+use crate::{crypt::encrypt, error::EncodeError, Resource};
 
 #[derive(Debug)]
 pub struct Encoder<W: Write> {
     writer: BufWriter<W>,
+    encrypt: bool,
 }
 
 impl<W: Write> Encoder<W> {
     pub fn new(w: W) -> Self {
         Self {
             writer: BufWriter::new(w),
+            encrypt: false,
         }
+    }
+
+    pub fn encrypt(&mut self, encrypt: bool) -> &mut Self {
+        self.encrypt = encrypt;
+        self
     }
 
     pub fn write(&mut self, resource: &Resource) -> Result<(), EncodeError> {
@@ -30,11 +37,21 @@ impl<W: Write> Encoder<W> {
         self.writer.write_u32::<LittleEndian>(block_size as u32)?;
         self.writer.write_u8(1)?;
 
-        self.writer.write_u8(resource.flags)?;
-        // TODO: encrypt.
         let mut crc = Crc32::new();
         crc.update(&resource.data);
-        self.writer.write_u32::<LittleEndian>(crc.as_u32())?;
+        let encrypt_key;
+        if self.encrypt {
+            self.writer.write_u8(resource.flags | 0x80)?;
+            let mut crc_bytes = [0u8; 4];
+            LittleEndian::write_u32(&mut crc_bytes, crc.as_u32());
+            encrypt(0x45dd0ba6, &mut crc_bytes);
+            encrypt_key = Some(LittleEndian::read_u32(&crc_bytes));
+            self.writer.write_all(&crc_bytes)?;
+        } else {
+            self.writer.write_u8(resource.flags)?;
+            self.writer.write_u32::<LittleEndian>(crc.as_u32())?;
+            encrypt_key = None;
+        }
         self.writer
             .write_u32::<LittleEndian>(resource.modified_time)?;
         self.writer
@@ -43,8 +60,13 @@ impl<W: Write> Encoder<W> {
             .write_u32::<LittleEndian>(resource.data.len() as u32)?;
         self.writer.write_all(resource.name.as_bytes())?;
         self.writer.write_u8(b'\0')?;
-        // TODO: encrypt.
-        self.writer.write_all(&resource.data)?;
+        if let Some(key) = encrypt_key {
+            let mut data = resource.data.clone();
+            encrypt(key, &mut data);
+            self.writer.write_all(&data)?;
+        } else {
+            self.writer.write_all(&resource.data)?;
+        }
         self.writer.flush()?;
         Ok(())
     }
