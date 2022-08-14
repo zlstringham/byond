@@ -63,7 +63,7 @@ impl<R: Read> Decoder<R> {
         if name_bytes[name_bytes.len() - 1] == b'\0' {
             name_bytes.pop();
         }
-        let mut data = Vec::with_capacity(size as usize);
+        let mut data = vec![0; size as usize];
         self.reader.read_exact(&mut data)?;
 
         let crc;
