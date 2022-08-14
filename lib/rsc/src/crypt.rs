@@ -1,5 +1,7 @@
 use std::num::Wrapping;
 
+pub(crate) const CRYPT_KEY: u32 = 0x45dd0ba6;
+
 /// 4-byte integer hash, full avalanche.
 /// https://burtleburtle.net/bob/hash/integer.html
 fn hash(a: u32) -> u32 {
@@ -12,7 +14,6 @@ fn hash(a: u32) -> u32 {
     a.0
 }
 
-#[allow(unused)]
 pub(crate) fn encrypt(key: u32, bytes: &mut [u8]) {
     bytes.iter_mut().fold(key, |k, b| {
         let xor = (k & 0xff) as u8;
@@ -21,7 +22,6 @@ pub(crate) fn encrypt(key: u32, bytes: &mut [u8]) {
     });
 }
 
-#[allow(unused)]
 pub(crate) fn decrypt(key: u32, bytes: &mut [u8]) {
     bytes.iter_mut().fold(key, |mut k, b| {
         let xor = (k & 0xff) as u8;

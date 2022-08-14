@@ -3,7 +3,11 @@ use std::io::{self, BufRead, BufReader, ErrorKind, Read};
 use byond_crc32::Crc32;
 use byteorder::{ByteOrder, LittleEndian, ReadBytesExt};
 
-use crate::{crypt::decrypt, error::DecodeError, Resource};
+use crate::{
+    crypt::{decrypt, CRYPT_KEY},
+    error::DecodeError,
+    Resource,
+};
 
 pub struct Decoder<R: Read> {
     reader: BufReader<R>,
@@ -26,10 +30,10 @@ impl<R: Read> Decoder<R> {
     pub fn read_next(&mut self) -> Result<Option<Resource>, DecodeError> {
         loop {
             let mut block_info = [0u8; 5];
-            // Use read() to test for EOF if Ok(0). If <5 bytes are read, read_exact() the rest.
+            // Use read() to test for EOF if Ok(0). If <len bytes are read, read_exact() the rest.
             match self.reader.read(&mut block_info) {
                 Ok(0) => return Ok(None),
-                Ok(n) if n < 5 => self.reader.read_exact(&mut block_info[n..])?,
+                Ok(n) if n < block_info.len() => self.reader.read_exact(&mut block_info[n..])?,
                 Err(e) if e.kind() == ErrorKind::Interrupted => continue,
                 Err(e) => return Err(e.into()),
                 _ => (),
@@ -70,7 +74,7 @@ impl<R: Read> Decoder<R> {
 
         let crc;
         if flags & 0x80 != 0 {
-            decrypt(0x45dd0ba6, &mut crc_bytes);
+            decrypt(CRYPT_KEY, &mut crc_bytes);
             crc = LittleEndian::read_u32(&crc_bytes);
             decrypt(crc, &mut data);
             flags &= 0x7f;

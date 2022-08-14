@@ -3,7 +3,11 @@ use std::io::{BufWriter, Write};
 use byond_crc32::Crc32;
 use byteorder::{ByteOrder, LittleEndian, WriteBytesExt};
 
-use crate::{crypt::encrypt, error::EncodeError, Resource};
+use crate::{
+    crypt::{encrypt, CRYPT_KEY},
+    error::EncodeError,
+    Resource,
+};
 
 #[derive(Debug)]
 pub struct Encoder<W: Write> {
@@ -43,7 +47,7 @@ impl<W: Write> Encoder<W> {
             self.writer.write_u8(resource.flags | 0x80)?;
             let mut crc_bytes = [0u8; 4];
             LittleEndian::write_u32(&mut crc_bytes, crc.as_u32());
-            encrypt(0x45dd0ba6, &mut crc_bytes);
+            encrypt(CRYPT_KEY, &mut crc_bytes);
             self.writer.write_all(&crc_bytes)?;
         } else {
             self.writer.write_u8(resource.flags)?;
