@@ -39,18 +39,15 @@ impl<W: Write> Encoder<W> {
 
         let mut crc = Crc32::new();
         crc.update(&resource.data);
-        let encrypt_key;
         if self.encrypt {
             self.writer.write_u8(resource.flags | 0x80)?;
             let mut crc_bytes = [0u8; 4];
             LittleEndian::write_u32(&mut crc_bytes, crc.as_u32());
             encrypt(0x45dd0ba6, &mut crc_bytes);
-            encrypt_key = Some(LittleEndian::read_u32(&crc_bytes));
             self.writer.write_all(&crc_bytes)?;
         } else {
             self.writer.write_u8(resource.flags)?;
             self.writer.write_u32::<LittleEndian>(crc.as_u32())?;
-            encrypt_key = None;
         }
         self.writer
             .write_u32::<LittleEndian>(resource.modified_time)?;
@@ -60,9 +57,9 @@ impl<W: Write> Encoder<W> {
             .write_u32::<LittleEndian>(resource.data.len() as u32)?;
         self.writer.write_all(resource.name.as_bytes())?;
         self.writer.write_u8(b'\0')?;
-        if let Some(key) = encrypt_key {
+        if self.encrypt {
             let mut data = resource.data.clone();
-            encrypt(key, &mut data);
+            encrypt(crc.as_u32(), &mut data);
             self.writer.write_all(&data)?;
         } else {
             self.writer.write_all(&resource.data)?;
