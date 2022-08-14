@@ -62,4 +62,25 @@ mod tests {
         assert_eq!(decoder.read_next().unwrap().unwrap(), resource);
         assert!(matches!(decoder.read_next(), Ok(None)));
     }
+
+    #[test]
+    fn encode_decode_skipped_resource() {
+        let resource = Resource {
+            flags: 4,
+            modified_time: 5,
+            created_time: 6,
+            name: "foo".to_string(),
+            data: b"bar".iter().cloned().collect(),
+        };
+        let mut buf = vec![];
+        {
+            let mut encoder = Encoder::new(&mut buf);
+            encoder.write(&resource).unwrap();
+            encoder.write(&resource).unwrap();
+        }
+        buf[4] = 0; // Set the block flag of the first resource to 0.
+        let mut decoder = Decoder::new(buf.as_slice());
+        assert_eq!(decoder.read_next().unwrap().unwrap(), resource);
+        assert!(matches!(decoder.read_next(), Ok(None)));
+    }
 }
