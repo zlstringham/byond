@@ -1,5 +1,6 @@
 use std::io::{self, BufRead, BufReader, ErrorKind, Read};
 
+use byond_crc32::Crc32;
 use byteorder::{ByteOrder, LittleEndian, ReadBytesExt};
 
 use crate::{crypt::decrypt, error::DecodeError, Resource};
@@ -7,6 +8,7 @@ use crate::{crypt::decrypt, error::DecodeError, Resource};
 pub struct Decoder<R: Read> {
     reader: BufReader<R>,
     decrypt: bool,
+    skip_checksum: bool,
 }
 
 impl<R: Read> Decoder<R> {
@@ -14,11 +16,17 @@ impl<R: Read> Decoder<R> {
         Self {
             reader: BufReader::new(r),
             decrypt: true,
+            skip_checksum: false,
         }
     }
 
     pub fn decrypt<'a>(&'a mut self, decrypt: bool) -> &'a Self {
         self.decrypt = decrypt;
+        self
+    }
+
+    pub fn skip_checksum(&mut self, skip_checksum: bool) -> &mut Self {
+        self.skip_checksum = skip_checksum;
         self
     }
 
@@ -65,17 +73,26 @@ impl<R: Read> Decoder<R> {
         let mut data = Vec::with_capacity(size as usize);
         io::copy(&mut self.reader.by_ref().take(size as u64), &mut data)?;
 
-        let _crc;
+        let crc;
         if self.decrypt && flags & 0x80 != 0 {
             decrypt(0x45dd0ba6, &mut crc_bytes);
-            _crc = LittleEndian::read_u32(&crc_bytes);
-            decrypt(_crc, &mut data);
+            crc = LittleEndian::read_u32(&crc_bytes);
+            decrypt(crc, &mut data);
             flags &= 0x7f;
         } else {
-            _crc = LittleEndian::read_u32(&crc_bytes);
+            crc = LittleEndian::read_u32(&crc_bytes);
         }
 
-        // TODO: checksum.
+        if !self.skip_checksum {
+            let mut checksum = Crc32::new();
+            checksum.update(&data);
+            if checksum != crc {
+                return Err(DecodeError::ChecksumMismatch {
+                    expected: crc,
+                    actual: checksum.as_u32(),
+                });
+            }
+        }
 
         Ok(Some(Resource {
             flags,
