@@ -7,7 +7,6 @@ use crate::{crypt::decrypt, error::DecodeError, Resource};
 
 pub struct Decoder<R: Read> {
     reader: BufReader<R>,
-    decrypt: bool,
     skip_checksum: bool,
 }
 
@@ -15,14 +14,8 @@ impl<R: Read> Decoder<R> {
     pub fn new(r: R) -> Self {
         Self {
             reader: BufReader::new(r),
-            decrypt: true,
             skip_checksum: false,
         }
-    }
-
-    pub fn decrypt<'a>(&'a mut self, decrypt: bool) -> &'a Self {
-        self.decrypt = decrypt;
-        self
     }
 
     pub fn skip_checksum(&mut self, skip_checksum: bool) -> &mut Self {
@@ -63,7 +56,7 @@ impl<R: Read> Decoder<R> {
         let size = self.reader.read_u32::<LittleEndian>()?;
         // Ensure we don't panic due to allocating beyond Vec capacity limits.
         if size > isize::MAX as u32 {
-            return Err(DecodeError::Size(size));
+            return Err(DecodeError::SizeLimitExceeded(size));
         }
         let mut name_bytes = Vec::with_capacity(32);
         self.reader.read_until(b'\0', &mut name_bytes)?;
@@ -74,7 +67,7 @@ impl<R: Read> Decoder<R> {
         io::copy(&mut self.reader.by_ref().take(size as u64), &mut data)?;
 
         let crc;
-        if self.decrypt && flags & 0x80 != 0 {
+        if flags & 0x80 != 0 {
             decrypt(0x45dd0ba6, &mut crc_bytes);
             crc = LittleEndian::read_u32(&crc_bytes);
             decrypt(crc, &mut data);
