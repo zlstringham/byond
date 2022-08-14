@@ -7,7 +7,7 @@ pub use decode::Decoder;
 pub use encode::Encoder;
 pub use error::DecodeError;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Resource {
     pub flags: u8,
     pub modified_time: u32,
