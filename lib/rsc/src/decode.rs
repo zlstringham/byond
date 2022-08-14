@@ -95,4 +95,12 @@ impl<R: Read> Decoder<R> {
             name: String::from_utf8_lossy(&name_bytes).into_owned(),
         }))
     }
+
+    pub fn read_all(&mut self) -> Result<Vec<Resource>, DecodeError> {
+        let mut result = vec![];
+        while let Some(r) = self.read_next()? {
+            result.push(r);
+        }
+        Ok(result)
+    }
 }
